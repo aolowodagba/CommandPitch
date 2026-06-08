@@ -1,0 +1,233 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================
+// GLOBAL MODELS
+// ============================================================
+
+model User {
+  id        String    @id @default(cuid())
+  name      String?
+  email     String    @unique
+  emailVerified DateTime?
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+  sessions  Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================
+// GROUP-SCOPED MODELS
+// ============================================================
+
+model Group {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  inviteCode  String     @unique
+  description String?
+  visibility  Visibility @default(PRIVATE)
+  createdBy   String
+  createdAt   DateTime   @default(now())
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+model GroupMember {
+  id       String    @id @default(cuid())
+  groupId  String
+  userId   String
+  role     GroupRole
+  joinedAt DateTime  @default(now())
+
+  @@unique([groupId, userId])
+}
+
+enum GroupRole {
+  owner
+  admin
+  player
+}
+
+model Schedule {
+  id             String   @id @default(cuid())
+  groupId        String
+  name           String
+  recurrenceRule String
+  teamSize       Int
+  venue          String
+  defaultTime    DateTime
+  defaultFee     Float?
+  isActive       Boolean  @default(true)
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ScheduleOverride {
+  id         String    @id @default(cuid())
+  scheduleId String
+  groupId    String
+  date       DateTime
+  venue      String?
+  teamSize   Int?
+  time       DateTime?
+  note       String?
+  createdAt  DateTime  @default(now())
+}
+
+model GameSession {
+  id           String           @id @default(cuid())
+  groupId      String
+  scheduleId   String?
+  date         DateTime
+  status       GameSessionStatus @default(DRAFT)
+  teamSize     Int
+  waiverReason String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+enum GameSessionStatus {
+  DRAFT
+  OPEN
+  LOCKED
+  COMPLETED
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  groupId    String
+  userId     String
+  type       PaymentType
+  status     PaymentStatus @default(PENDING)
+  validFrom  DateTime?
+  validUntil DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+enum PaymentType {
+  WEEKLY
+  MONTHLY
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaymentReceipt {
+  id        String   @id @default(cuid())
+  paymentId String
+  groupId   String
+  fileUrl   String
+  fileType  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PaymentEligibility {
+  id         String            @id @default(cuid())
+  groupId    String
+  userId     String
+  type       PaymentType
+  status     EligibilityStatus @default(PENDING)
+  validFrom  DateTime?
+  validUntil DateTime?
+  createdAt  DateTime          @default(now())
+
+  @@unique([groupId, userId, type])
+}
+
+enum EligibilityStatus {
+  APPROVED_WEEKLY
+  APPROVED_MONTHLY
+  PENDING
+  REJECTED
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  sessionId String
+  groupId   String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  teamId      String
+  groupId     String
+  playerId    String?
+  placeholder String?
+  isReserved  Boolean  @default(false)
+  purpose     String?
+}
+
+model SessionPlayerStats {
+  id        String @id @default(cuid())
+  sessionId String
+  groupId   String
+  playerId  String
+  goals     Int    @default(0)
+  teamLabel String
+
+  @@unique([sessionId, playerId])
+}
+
+model PlayerStats {
+  id                  String   @id @default(cuid())
+  groupId             String
+  playerId            String
+  totalGoals          Int      @default(0)
+  totalSessionsPlayed Int      @default(0)
+  updatedAt           DateTime @updatedAt
+
+  @@unique([groupId, playerId])
+}

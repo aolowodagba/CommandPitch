@@ -1,0 +1,41 @@
+{
+    "fontFamily": {
+        "sans": "Inter, sans-serif"
+    },
+    "fontSize": {
+        "displayLarge": "57px",
+        "displayMedium": "45px",
+        "displaySmall": "36px",
+        "headlineLarge": "32px",
+        "headlineMedium": "28px",
+        "headlineSmall": "24px",
+        "titleLarge": "22px",
+        "titleMedium": "16px",
+        "titleSmall": "14px",
+        "bodyLarge": "16px",
+        "bodyMedium": "14px",
+        "bodySmall": "12px",
+        "labelLarge": "14px",
+        "labelMedium": "12px",
+        "labelSmall": "11px"
+    },
+    "fontWeight": {
+        "regular": 400,
+        "medium": 500,
+        "bold": 700
+    },
+    "lineHeight": {
+        "displayLarge": 64,
+        "displayMedium": 52,
+        "displaySmall": 44,
+        "headlineLarge": 40,
+        "headlineMedium": 36,
+        "headlineSmall": 32,
+        "titleLarge": 28,
+        "titleMedium": 24,
+        "titleSmall": 20,
+        "bodyLarge": 24,
+        "bodyMedium": 20,
+        "bodySmall": 16
+    }
+}
