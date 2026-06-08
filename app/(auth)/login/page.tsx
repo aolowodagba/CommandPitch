@@ -1,29 +1,134 @@
-import { auth, signIn } from "@/lib/auth"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default async function LoginPage() {
-  const session = await auth()
-  if (session?.user) redirect("/")
+export default function LoginPage() {
+  const router = useRouter()
+  const [mode, setMode] = useState<"login" | "signup">("login")
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        name: mode === "signup" ? name : undefined,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError("Authentication failed. Please try again.")
+        return
+      }
+
+      router.push("/")
+      router.refresh()
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">CommandPitch</CardTitle>
-          <CardDescription>Sign in to manage your football groups</CardDescription>
+          <CardDescription>
+            {mode === "login" ? "Sign in to your account" : "Create a new account"}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="flex rounded-lg border p-1">
+            <button
+              type="button"
+              onClick={() => setMode("login")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                mode === "login" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                mode === "signup" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <form onSubmit={handleEmailSubmit} className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Profile Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Your display name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading
+                ? "Please wait..."
+                : mode === "login"
+                  ? "Sign In with Email"
+                  : "Create Account"}
+            </Button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+
           <form
             action={async () => {
-              "use server"
               await signIn("google", { redirectTo: "/" })
             }}
           >
             <Button type="submit" variant="outline" className="w-full gap-2">
               <GoogleIcon />
-              Continue with Google
+              Sign in with Google
             </Button>
           </form>
         </CardContent>
